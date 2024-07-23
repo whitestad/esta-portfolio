@@ -1,33 +1,21 @@
+# Dockerfile
 # Stage 1: Build the application
-FROM node:16 AS builder
+FROM node:16 AS build
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+COPY package.json yarn.lock ./
+RUN yarn install
 
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application source code
 COPY . .
 
-# Build the application
-RUN npm run build
+RUN yarn build
 
-# Stage 2: Serve the application
+# Stage 2: Serve the application with nginx
 FROM nginx:alpine
 
-# Copy the built application from the builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration
+COPY --from=build /app/dist /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
-COPY nginx-temp.conf /etc/nginx/nginx-temp.conf
 
-# Expose port 80 and 443
-EXPOSE 80 443
-
-# Start nginx with temporary configuration
-CMD ["nginx", "-c", "/etc/nginx/nginx-temp.conf", "-g", "daemon off;"]
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
