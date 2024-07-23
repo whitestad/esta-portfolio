@@ -19,21 +19,21 @@ if [ -d "$data_path" ]; then
 fi
 
 mkdir -p "$data_path"
-mkdir -p "$data_path/conf"
+mkdir -p "$data_path/conf/live/$domains"
 mkdir -p "$data_path/www"
 
 echo "### Creating dummy certificate for $domains ..."
 path="/etc/letsencrypt/live/$domains"
-mkdir -p "$data_path/conf/live/$domains"
+mkdir -p "$path"
 docker-compose run --rm --entrypoint "\
-  openssl req -x509 -nodes -newkey rsa:1024 -days 1\
+  openssl req -x509 -nodes -newkey rsa:1024 -days 1 \
     -keyout '$path/privkey.pem' \
     -out '$path/fullchain.pem' \
     -subj '/CN=localhost'" certbot
 
 echo
 
-echo "### Starting nginx ..."
+echo "### Starting nginx with temporary configuration ..."
 docker-compose up --force-recreate -d web
 echo
 
@@ -70,5 +70,8 @@ docker-compose run --rm --entrypoint "\
     --force-renewal" certbot
 echo
 
-echo "### Reloading nginx ..."
-docker-compose exec web nginx -s reload
+echo "### Stopping nginx ..."
+docker-compose down
+
+echo "### Starting nginx with SSL configuration ..."
+docker-compose up --force-recreate -d web
