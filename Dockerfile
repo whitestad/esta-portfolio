@@ -1,26 +1,32 @@
-# Установка окружения для сборки
-FROM node:16 AS build
+# Stage 1: Build the application
+FROM node:16 AS builder
 
+# Set working directory
 WORKDIR /app
 
-COPY package.json package-lock.json ./
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
 RUN npm install
 
+# Copy the rest of the application source code
 COPY . .
 
+# Build the application
 RUN npm run build
 
-# Установка окружения для сервера
+# Stage 2: Serve the application
 FROM nginx:alpine
 
-COPY --from=build /app/dist /usr/share/nginx/html
+# Copy the built application from the builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Удаление стандартной конфигурации nginx
-RUN rm /etc/nginx/conf.d/default.conf
+# Copy nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Копирование нашей конфигурации nginx
-COPY nginx.conf /etc/nginx/conf.d
+# Expose port 80 and 443
+EXPOSE 80 443
 
-EXPOSE 80
-
+# Start nginx
 CMD ["nginx", "-g", "daemon off;"]
