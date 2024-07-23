@@ -21,6 +21,12 @@ fi
 mkdir -p "$data_path/www"
 mkdir -p "$data_path/conf/live/$domains"
 
+# Start Nginx
+docker-compose up -d nginx
+
+# Wait for Nginx to be ready
+sleep 10
+
 docker-compose run --rm --entrypoint "\
   certbot certonly --webroot --webroot-path=/var/www/certbot \
     --email $email \

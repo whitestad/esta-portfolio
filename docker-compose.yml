@@ -1,14 +1,12 @@
-version: '3'
+version: '3.8' # Обновление версии
 
 services:
   web:
     build: .
-    ports:
-      - "80:80"
     volumes:
       - ./dist:/usr/share/nginx/html
     depends_on:
-      - certbot
+      - nginx
 
   certbot:
     image: certbot/certbot
@@ -26,6 +24,3 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    depends_on:
-      - web
-      - certbot
